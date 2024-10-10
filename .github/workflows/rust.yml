@@ -43,8 +43,8 @@ jobs:
             ${{ runner.OS }}-cargo-cache-
       - name: Dependencies
         run: |
-          cargo install --force cargo-llvm-cov
-          cargo install --force cargo-audit
+          cargo install cargo-llvm-cov
+          cargo install cargo-audit
       - name: Build
         run: cargo build --verbose
       - name: Tests and Code Coverage
