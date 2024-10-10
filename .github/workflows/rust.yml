@@ -33,6 +33,7 @@ jobs:
           path: |
             ~/.cargo/bin/
             ~/.cargo/crates.toml
+            ~/.cargo/.crates2.json
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
@@ -42,8 +43,8 @@ jobs:
             ${{ runner.OS }}-cargo-cache-
       - name: Dependencies
         run: |
-          cargo install-upgrade cargo-llvm-cov
-          cargo install-upgrade cargo-audit
+          cargo install --force cargo-llvm-cov
+          cargo install --force cargo-audit
       - name: Build
         run: cargo build --verbose
       - name: Tests and Code Coverage
