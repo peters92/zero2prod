@@ -16,7 +16,7 @@ async fn main() -> Result<(), std::io::Error> {
         App::new()
             .route("/health_check", web::get().to(health_check))
             .route("/", web::get().to(greet))
-        // .route("/{name}", web::get().to(greet))
+            .route("/{name}", web::get().to(greet))
     })
     .bind("127.0.0.1:8000")?
     .run()
