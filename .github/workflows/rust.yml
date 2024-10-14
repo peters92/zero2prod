@@ -9,22 +9,22 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-jobs:  
+jobs:
   linting:
     name: linting
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
       - name: Linting
         run: cargo clippy  -- -D warnings
       - name: Formatting
         run: cargo fmt -- --check
-      
+
   build:
     name: build
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
       - name: Cache cargo dependencies
@@ -43,8 +43,8 @@ jobs:
             ${{ runner.OS }}-cargo-cache-
       - name: Dependencies
         run: |
-          cargo install cargo-llvm-cov
-          cargo install cargo-audit
+          cargo install --force cargo-llvm-cov
+          cargo install --force cargo-audit
       - name: Build
         run: cargo build --verbose
       - name: Tests and Code Coverage
