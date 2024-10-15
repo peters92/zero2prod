@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, web, dev::Server};
+use actix_web::{dev::Server, web, App, HttpServer};
 use std::net::TcpListener;
 
 use crate::routes::{health_check, subscribe};
