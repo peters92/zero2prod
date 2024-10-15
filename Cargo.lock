@@ -3007,7 +3007,10 @@ dependencies = [
  "config",
  "reqwest",
  "serde",
+<<<<<<< HEAD
  "sqlx",
+=======
+>>>>>>> main
  "tokio",
 ]
 
