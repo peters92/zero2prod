@@ -16,7 +16,7 @@ async fn main() -> Result<(), std::io::Error> {
     let listener = TcpListener::bind(address).expect("We should be able to bind a random port.˝");
 
     let connection_pool =
-        PgPool::connect(&configuration.database.connection_string().expose_secret())
+        PgPool::connect(configuration.database.connection_string().expose_secret())
             .await
             .expect("We should be able to connect to the database.");
     run(listener, connection_pool)?.await
