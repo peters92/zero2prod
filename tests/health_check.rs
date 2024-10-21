@@ -1,17 +1,37 @@
 use reqwest;
+use secrecy::{ExposeSecret, Secret};
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
+use std::sync::LazyLock;
 use uuid::Uuid;
 use zero2prod::configuration::{self, DatabaseSettings};
+use zero2prod::telemetry;
 
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
 }
 
+static TRACING: LazyLock<()> = LazyLock::new(|| {
+    let default_filter_lever = "info".to_string();
+    let subscriber_name = "debug".to_string();
+
+    if std::env::var("TEST_LOG").is_ok() {
+        let subscriber =
+            telemetry::get_subscriber(subscriber_name, default_filter_lever, std::io::stdout);
+        telemetry::init_subscriber(subscriber);
+    } else {
+        let subscriber =
+            telemetry::get_subscriber(subscriber_name, default_filter_lever, std::io::sink);
+        telemetry::init_subscriber(subscriber);
+    }
+});
+
 /// Create an application instance
 /// and return the local address with randomly bound port - "127.0.0.1:PORT"
 async fn spawn_app() -> TestApp {
+    LazyLock::force(&TRACING);
+
     let listener =
         TcpListener::bind("127.0.0.1:0").expect("We should be able to bind a random port.");
     let port = listener.local_addr().unwrap().port();
@@ -37,14 +57,13 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     let maintenance_settings = DatabaseSettings {
         database_name: "postgres".to_string(),
         username: "postgres".to_string(),
-        password: "password".to_string(),
+        password: Secret::new("password".to_string()),
         ..config.clone()
     };
-    let mut connection = PgConnection::connect(
-        &maintenance_settings.connection_string()
-        )
-        .await
-        .expect("We should be able to connect to the maintenance database.");
+    let mut connection =
+        PgConnection::connect(&maintenance_settings.connection_string().expose_secret())
+            .await
+            .expect("We should be able to connect to the maintenance database.");
 
     connection
         .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
@@ -52,7 +71,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("We should be able to create a test database through the maintenance db.");
 
     // Migrate database
-    let connection_pool = PgPool::connect(&config.connection_string())
+    let connection_pool = PgPool::connect(&config.connection_string().expose_secret())
         .await
         .expect("We should be able to create the database pool at this point.");
     sqlx::migrate!("./migrations")
@@ -62,7 +81,6 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
 
     connection_pool
 }
-
 
 #[tokio::test]
 async fn health_check_works() {
